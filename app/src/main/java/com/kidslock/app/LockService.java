@@ -65,7 +65,7 @@ public class LockService extends Service {
 		// Android 14+ 需要指定前台服务类型
 		if (Build.VERSION.SDK_INT >= 34) {
 			startForeground(NOTIFICATION_ID, buildNotification(), 
-					FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+					Service.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
 		} else {
 			startForeground(NOTIFICATION_ID, buildNotification());
 		}

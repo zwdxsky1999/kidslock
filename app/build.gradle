@@ -1,0 +1,80 @@
+plugins {
+    id 'com.android.application'
+}
+
+// ==================== 正式签名（Release） ====================
+// 优先读 keystore.properties（本地构建，已 gitignore）
+// 其次读环境变量 KEYSTORE_FILE / KEYSTORE_PASSWORD / KEY_ALIAS / KEY_PASSWORD（CI Secrets）
+// 都没有时 release 回退 debug 签名，保证随时能出包
+def ksPropsFile = rootProject.file("keystore.properties")
+def ksProps = new Properties()
+def hasKsProps = ksPropsFile.exists()
+if (hasKsProps) {
+    ksPropsFile.withInputStream { ksProps.load(it) }
+}
+def envKsFile = System.getenv("KEYSTORE_FILE")
+def hasEnvKs = envKsFile != null && !envKsFile.trim().isEmpty()
+
+android {
+    namespace 'com.kidslock.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.kidslock.app"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }
+
+    signingConfigs {
+        if (hasKsProps) {
+            release {
+                storeFile file(ksProps['storeFile'])
+                storePassword ksProps['storePassword']
+                keyAlias ksProps['keyAlias']
+                keyPassword ksProps['keyPassword']
+                storeType 'PKCS12'
+            }
+        } else if (hasEnvKs) {
+            release {
+                storeFile file(envKsFile.trim())
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+                storeType 'PKCS12'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (hasKsProps || hasEnvKs) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // Bundle APK splits for different ABIs - smaller APK for TV
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi-v7a', 'arm64-v8a'
+            universalApk true
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.11.0'
+}

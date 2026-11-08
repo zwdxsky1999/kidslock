@@ -1,0 +1,101 @@
+name: Build TV Quiz Lock APK
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore: ['**/*.md']
+    tags: ['v*']
+  workflow_dispatch:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # 有签名密钥 secret 时出正式签名版；没有则回退 debug 版
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # 不用 android-actions/setup-android@v3：它近期执行 `sdkmanager tools`，
+      # 而 tools 包已被 Google 下架导致必挂。手动装 cmdline-tools，稳定可控。
+      - name: Install Android cmdline-tools
+        run: |
+          SDK=$HOME/android-sdk
+          mkdir -p "$SDK/cmdline-tools"
+          curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/cmdtools.zip
+          unzip -q /tmp/cmdtools.zip -d "$SDK/cmdline-tools"
+          mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "$SDK/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$SDK/platform-tools" >> "$GITHUB_PATH"
+
+      - name: Install SDK packages & accept licenses
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+
+      # 仓库未提交 gradle wrapper 脚本，CI 内下载 Gradle 8.4 直接构建
+      - name: Install Gradle 8.4
+        run: |
+          GRADLE_VERSION=8.4
+          curl -sL https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -o gradle.zip
+          unzip -q gradle.zip
+          mv gradle-${GRADLE_VERSION} gradle-dist
+
+      - name: Prepare signing key
+        if: env.KEYSTORE_BASE64 != ''
+        run: |
+          mkdir -p "$HOME/keys"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$HOME/keys/release.p12"
+          echo "KEYSTORE_FILE=$HOME/keys/release.p12" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Build signed release APK
+        if: env.KEYSTORE_BASE64 != ''
+        run: ./gradle-dist/bin/gradle assembleRelease --no-daemon --stacktrace
+
+      - name: Build debug APK (fallback：未配置签名密钥)
+        if: env.KEYSTORE_BASE64 == ''
+        run: ./gradle-dist/bin/gradle assembleDebug --no-daemon --stacktrace
+
+      # 交付 universal 包（含全部 ABI，任何电视都能装）
+      - name: Resolve APK path
+        id: apk
+        run: |
+          if [ "${{ env.KEYSTORE_BASE64 != '' }}" = "true" ]; then
+            P="app/build/outputs/apk/release/app-universal-release.apk"
+          else
+            P="app/build/outputs/apk/debug/app-universal-debug.apk"
+          fi
+          echo "path=$P" >> "$GITHUB_OUTPUT"
+          ls -l "$P"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv-quiz-lock-apk
+          path: ${{ steps.apk.outputs.path }}
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: ${{ steps.apk.outputs.path }}
+          generate_release_notes: true

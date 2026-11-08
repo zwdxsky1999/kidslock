@@ -53,19 +53,27 @@ public class LockService extends Service {
     private WindowManager windowManager;
     private View overlayView;
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        pref = new PrefManager(this);
-        handler = new Handler(Looper.getMainLooper());
-        windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-        createNotificationChannel();
-        Log.i(TAG, "LockService created");
-    }
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		pref = new PrefManager(this);
+		handler = new Handler(Looper.getMainLooper());
+		windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+		createNotificationChannel();
+		Log.i(TAG, "LockService created");
+		
+		// Android 14+ 需要指定前台服务类型
+		if (Build.VERSION.SDK_INT >= 34) {
+			startForeground(NOTIFICATION_ID, buildNotification(), 
+					FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+		} else {
+			startForeground(NOTIFICATION_ID, buildNotification());
+		}
+	}
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        startForeground(NOTIFICATION_ID, buildNotification());
+        updateNotification();
 
         // 已锁屏 → 进入锁屏守护模式
         if (pref.isLocked()) {

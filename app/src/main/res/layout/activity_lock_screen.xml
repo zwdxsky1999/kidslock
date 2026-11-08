@@ -65,7 +65,9 @@
                 android:focusable="true"
                 android:clickable="true"
                 android:nextFocusLeft="@id/btnOption4"
-                android:nextFocusRight="@id/btnOption2" />
+                android:nextFocusRight="@id/btnOption2"
+				android:focusableInTouchMode="true" />
+				
 
             <Button
                 android:id="@+id/btnOption2"
@@ -78,7 +80,10 @@
                 android:textColor="@color/btn_text"
                 android:textSize="@dimen/text_button"
                 android:focusable="true"
-                android:clickable="true" />
+                android:clickable="true"
+				android:nextFocusLeft="@id/btnOption1"
+				android:nextFocusRight="@id/btnOption3"
+				android:focusableInTouchMode="true" />
 
             <Button
                 android:id="@+id/btnOption3"
@@ -91,7 +96,10 @@
                 android:textColor="@color/btn_text"
                 android:textSize="@dimen/text_button"
                 android:focusable="true"
-                android:clickable="true" />
+                android:clickable="true"
+				android:nextFocusLeft="@id/btnOption2"
+				android:nextFocusRight="@id/btnOption4"
+				android:focusableInTouchMode="true" />
 
             <Button
                 android:id="@+id/btnOption4"
@@ -106,7 +114,8 @@
                 android:focusable="true"
                 android:clickable="true"
                 android:nextFocusLeft="@id/btnOption3"
-                android:nextFocusRight="@id/btnOption1" />
+                android:nextFocusRight="@id/btnOption1"
+				android:focusableInTouchMode="true" />
 
         </LinearLayout>
 

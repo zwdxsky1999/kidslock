@@ -41,15 +41,17 @@
             </intent-filter>
         </activity>
 
-        <!-- Lock Screen Activity -->
-        <activity
-            android:name=".LockScreenActivity"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:excludeFromRecents="true"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="landscape"
-            android:theme="@style/Theme.KidsLock.FullScreen" />
+		<!-- Lock Screen Activity -->
+		<activity
+			android:name=".LockScreenActivity"
+			android:exported="false"
+			android:launchMode="singleTask"
+			android:excludeFromRecents="true"
+			android:configChanges="orientation|screenSize|keyboardHidden"
+			android:screenOrientation="landscape"
+			android:theme="@style/Theme.KidsLock.FullScreen"
+			android:showOnLockScreen="true"
+			android:turnScreenOn="true" />
 
         <!-- HOME launcher alias (disabled by default, enabled when locked) -->
         <activity-alias

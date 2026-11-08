@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.KeyEvent;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -75,8 +76,43 @@ public class LockScreenActivity extends AppCompatActivity {
         hideSystemUI();
 
         initViews();
+		// 强制第一个选项获取焦点（TV 遥控器需要）
+		optionButtons[0].requestFocus();		
         loadRound();
     }
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+    // 遥控器确认键 → 触发当前有焦点的按钮点击
+    if (keyCode == KeyEvent.KEYCODE_ENTER 
+            || keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+            || keyCode == KeyEvent.KEYCODE_BUTTON_A) {
+        
+        if (layoutPin.getVisibility() == View.VISIBLE) {
+            // PIN 界面，让 PIN 按钮自己处理焦点
+            return super.onKeyDown(keyCode, event);
+        }
+        
+        // 如果有当前题目，检查哪个按钮有焦点
+        if (current != null) {
+            for (int i = 0; i < optionButtons.length; i++) {
+                if (optionButtons[i].hasFocus()) {
+                    onOptionSelected(i);
+                    return true;
+                }
+            }
+            // 没有按钮有焦点，让第一个选项获取焦点
+            optionButtons[0].requestFocus();
+            return true;
+        }
+        
+        // 没有题目时（加载中），忽略
+        return true;
+    }
+    
+    // 方向键交给系统处理焦点移动
+    return super.onKeyDown(keyCode, event);
+}
 
     private void initViews() {
         layoutMain = findViewById(R.id.layoutMain);

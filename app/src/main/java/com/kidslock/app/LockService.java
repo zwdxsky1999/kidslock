@@ -222,9 +222,6 @@ public class LockService extends Service {
                         "孩子模式锁屏",
                         NotificationManager.IMPORTANCE_HIGH);
                 ch.setDescription("答题解锁通知");
-                if (Build.VERSION.SDK_INT >= 34) {
-					ch.setBypassDontDisturb(true);
-				}
                 nm.createNotificationChannel(ch);
             }
         }

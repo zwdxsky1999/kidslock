@@ -177,10 +177,10 @@
                 android:text="25分" android:textSize="@dimen/text_body"
                 android:background="@drawable/btn_settings_bg" android:textColor="@color/btn_text"
                 android:focusable="true" android:clickable="true" />
-            <Button android:id="@+id/btnInt30"
+            <Button android:id="@+id/btnInt1"
                 android:layout_width="wrap_content" android:layout_height="@dimen/btn_height"
                 android:layout_margin="@dimen/btn_margin" android:minWidth="70dp"
-                android:text="30分" android:textSize="@dimen/text_body"
+                android:text="1分" android:textSize="@dimen/text_body"
                 android:background="@drawable/btn_settings_bg" android:textColor="@color/btn_text"
                 android:focusable="true" android:clickable="true" />
         </LinearLayout>

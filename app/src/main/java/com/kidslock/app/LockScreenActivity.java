@@ -302,11 +302,7 @@ public class LockScreenActivity extends AppCompatActivity {
         // 通知服务：隐藏悬浮窗 + 调度下一次闹钟
 		Intent serviceIntent = new Intent(this, LockService.class);
 		serviceIntent.setAction(LockService.ACTION_LOCK_DEVICE); // 复用，服务内会检测已解锁状态
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			startForegroundService(serviceIntent);
-		} else {
-			startService(serviceIntent);
-		}
+		startService(serviceIntent);
         finishAffinity();
     }
 

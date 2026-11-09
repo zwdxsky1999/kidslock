@@ -109,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
 
         // 出题间隔
         int[] intButtons = {R.id.btnInt3, R.id.btnInt5, R.id.btnInt10, R.id.btnInt15,
-                R.id.btnInt20, R.id.btnInt25, R.id.btnInt30};
-        int[] intValues = {3, 5, 10, 15,20,25,30};
+                R.id.btnInt20, R.id.btnInt25, R.id.btnInt1};
+        int[] intValues = {3, 5, 10, 15,20,25,1};
         for (int i = 0; i < intButtons.length; i++) {
             final int mins = intValues[i];
             findViewById(intButtons[i]).setOnClickListener(v -> {

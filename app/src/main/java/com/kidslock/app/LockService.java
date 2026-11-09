@@ -51,8 +51,7 @@ public class LockService extends Service {
         // Android 14+ 前台服务必须指定类型
         Notification notification = buildNotification();
         if (Build.VERSION.SDK_INT >= 34) {
-            startForeground(NOTIFICATION_ID, notification,
-                    Service.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            startForeground(NOTIFICATION_ID, notification, 0x0000000F);
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
@@ -223,7 +222,9 @@ public class LockService extends Service {
                         "孩子模式锁屏",
                         NotificationManager.IMPORTANCE_HIGH);
                 ch.setDescription("答题解锁通知");
-                ch.setBypassDontDisturb(true);
+                if (Build.VERSION.SDK_INT >= 34) {
+					ch.setBypassDontDisturb(true);
+				}
                 nm.createNotificationChannel(ch);
             }
         }

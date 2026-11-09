@@ -58,28 +58,33 @@ public class LockScreenActivity extends AppCompatActivity {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lock_screen);
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        pref = new PrefManager(this);
-        bank = QuestionBank.loadFromAssets(this);
-        requiredCount = pref.getUnlockCount();
+		// 锁屏可见
+		getWindow().addFlags(
+				WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+						| WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+						| WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+						| WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
 
-        getWindow().addFlags(
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                        | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-                        | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-                        | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
-        );
-        hideSystemUI();
+		if (Build.VERSION.SDK_INT >= 27) {
+			setShowWhenLocked(true);
+			setTurnScreenOn(true);
+		}
 
-        initViews();
-		// 强制第一个选项获取焦点（TV 遥控器需要）
-		optionButtons[0].requestFocus();		
-        loadRound();
-    }
+		setContentView(R.layout.activity_lock_screen);
+
+		pref = new PrefManager(this);
+		bank = QuestionBank.loadFromAssets(this);
+		requiredCount = pref.getUnlockCount();
+
+		hideSystemUI();
+		initViews();
+		optionButtons[0].requestFocus();
+		loadRound();
+	}
 	
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -222,6 +227,8 @@ public class LockScreenActivity extends AppCompatActivity {
         }
         updateProgress();
         tvFeedback.setVisibility(View.GONE);
+	    // ← 加这一行：题目切换后重新把焦点给第一个选项
+		optionButtons[0].requestFocus();	
     }
 
     private void onOptionSelected(int index) {
@@ -292,7 +299,14 @@ public class LockScreenActivity extends AppCompatActivity {
         pref.resetPinFailures();
         submitIfOnline();
         pref.startTimer(pref.getIntervalMinutes()); // 启动自由窗口计时
-        LockService.requestFreeWindow(this);        // 隐藏悬浮窗，继续守护（到点再锁）
+        // 通知服务：隐藏悬浮窗 + 调度下一次闹钟
+		Intent serviceIntent = new Intent(this, LockService.class);
+		serviceIntent.setAction(LockService.ACTION_LOCK_DEVICE); // 复用，服务内会检测已解锁状态
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			startForegroundService(serviceIntent);
+		} else {
+			startService(serviceIntent);
+		}
         finishAffinity();
     }
 

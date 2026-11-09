@@ -65,12 +65,12 @@ public class BootReceiver extends BroadcastReceiver {
     }
 
     private void startLockService(Context context) {
-        Intent serviceIntent = new Intent(context, LockService.class);
-        serviceIntent.putExtra("action", "start_timer");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(serviceIntent);
-        } else {
-            context.startService(serviceIntent);
-        }
-    }
+		Intent serviceIntent = new Intent(context, LockService.class);
+		serviceIntent.setAction(LockService.ACTION_LOCK_DEVICE);  // ← 改用 setAction
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			context.startForegroundService(serviceIntent);
+		} else {
+			context.startService(serviceIntent);
+		}
+	}
 }

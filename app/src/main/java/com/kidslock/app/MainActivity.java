@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startLockService() {
         Intent serviceIntent = new Intent(this, LockService.class);
-        serviceIntent.putExtra("action", "start_timer");
+        serviceIntent.setAction(LockService.ACTION_LOCK_DEVICE); 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
         } else {

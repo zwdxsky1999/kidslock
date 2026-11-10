@@ -23,17 +23,29 @@
             android:textStyle="bold"
             android:layout_marginBottom="@dimen/spacing_small" />
 
-        <!-- 题干 -->
-        <TextView
-            android:id="@+id/tvStem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/text_primary"
-            android:textSize="40sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginHorizontal="@dimen/tv_margin_h"
-            android:layout_marginVertical="@dimen/spacing_medium" />
+		<!-- 题干：可滚动 -->
+		<androidx.core.widget.NestedScrollView
+			android:id="@+id/stemScroll"
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="1"
+			android:fillViewport="true"
+			android:scrollbars="vertical"
+			android:focusable="false"
+			android:focusableInTouchMode="false">
+
+			<TextView
+				android:id="@+id/tvStem"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textColor="@color/text_primary"
+				android:textSize="40sp"
+				android:textStyle="bold"
+				android:gravity="center"
+				android:lineSpacingExtra="8dp"
+				android:paddingHorizontal="@dimen/tv_margin_h"
+				android:scrollbars="vertical" />
+		</androidx.core.widget.NestedScrollView>
 
         <!-- 科目 · 单元 -->
         <TextView

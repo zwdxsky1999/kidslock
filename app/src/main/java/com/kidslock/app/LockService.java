@@ -113,38 +113,42 @@ public class LockService extends Service {
 
     // ==================== 闹钟调度 ====================
 
-    private void scheduleNextQuiz() {
-        int minutes = pref.getIntervalMinutes();
-        if (minutes <= 0) {
-            Log.w(TAG, "scheduleNextQuiz: interval=" + minutes + ", skip");
-            return;
-        }
+	private void scheduleNextQuiz() {
+		int minutes = pref.getIntervalMinutes();
+		if (minutes <= 0) {
+			Log.w(TAG, "scheduleNextQuiz: interval=" + minutes + ", skip");
+			return;
+		}
 
-        long delayMs = minutes * 60_000L;
-        long triggerAt = System.currentTimeMillis() + delayMs;
+		long delayMs = minutes * 60_000L;
+		long triggerAt = System.currentTimeMillis() + delayMs;
 
-        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        if (am == null) {
-            Log.e(TAG, "scheduleNextQuiz: AlarmManager unavailable");
-            return;
-        }
+		AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+		if (am == null) {
+			Log.e(TAG, "scheduleNextQuiz: AlarmManager unavailable");
+			return;
+		}
 
-        if (Build.VERSION.SDK_INT >= 31) {
-            if (!am.canScheduleExactAlarms()) {
-                Log.w(TAG, "scheduleNextQuiz: cannot schedule exact alarms, fallback to set()");
-                scheduleInexact(am, triggerAt);
-                return;
-            }
-        }
+		Intent intent = new Intent(this, LockAlarmReceiver.class);
+		PendingIntent pi = PendingIntent.getBroadcast(
+				this, ALARM_REQUEST_CODE, intent,
+				PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        Intent intent = new Intent(this, LockAlarmReceiver.class);
-        PendingIntent pi = PendingIntent.getBroadcast(
-                this, ALARM_REQUEST_CODE, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
-        Log.i(TAG, "scheduleNextQuiz: alarm set, interval=" + minutes + "min, triggerAt=" + triggerAt);
-    }
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			// setAlarmClock：最高优先级，能穿透待机/Doze/屏保
+			// 不受 canScheduleExactAlarms 限制，不需要额外权限
+			AlarmManager.AlarmClockInfo alarmClockInfo =
+					new AlarmManager.AlarmClockInfo(triggerAt, null);
+			am.setAlarmClock(alarmClockInfo, pi);
+			Log.i(TAG, "scheduleNextQuiz: AlarmClock set (wakes from standby), interval="
+					+ minutes + "min, triggerAt=" + triggerAt);
+		} else {
+			// fallback for API < 21
+			am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+			Log.i(TAG, "scheduleNextQuiz: setExact fallback, interval="
+					+ minutes + "min, triggerAt=" + triggerAt);
+		}
+	}
 
     private void scheduleInexact(AlarmManager am, long triggerAt) {
         Intent intent = new Intent(this, LockAlarmReceiver.class);
